@@ -14,7 +14,7 @@ pipeline{
             steps {
                 sh 'npm install'
                 sh 'npm run build'
-                archiveArtifacts artifacts: 'build/'
+                archiveArtifacts artifacts: 'dist/'
             }
         }
         
@@ -27,7 +27,7 @@ pipeline{
             
             steps{
                 sh 'npm install netlify-cli'
-                sh 'npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --dir build/ --prod'
+                sh 'npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --dir dist/ --prod'
 
             }
         }
