@@ -1,26 +1,65 @@
-name: CI
-on: [push]
+name: CI/CD
+
+on:
+  push:
+    branches:
+     - master
+  
+  pull_request:
+    branches:
+      - master
+  
+
 jobs:
-  tests:
+
+  build:
+    name: build
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout 🛎️
-        uses: actions/checkout@v2.3.1
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-      - name: Cypress run
-        uses: cypress-io/github-action@v2
-        env:
-          CYPRESS_CRASH_REPORTS: 0
-        with:
-          start: npm run start:dist
-      - name: List built files
-        if: ${{ github.ref == 'refs/heads/master' }}
-        run: ls dist
-      - name: Maybe deploy 🚀
-        if: ${{ github.ref == 'refs/heads/master' }}
-        uses: wmt-harshs/github-pages-deploy-action@4.1.5
-        with:
-          branch: gh-pages # The branch the action should deploy to.
-          folder: dist # The folder the action should deploy.
+    - name: chackout code
+      uses: actions/checkout@v2
+    
+    # - name: install node.js
+    #   uses: actions/setup-node@v1
+    #   with:
+    #     node-version: 16
+    
+    - name: install npm packages
+      run: npm ci
+
+    - name: build project
+      run: npm run build
+
+    - name: run tests
+      run: npm run test
+
+    - name: Cypress run
+      uses: cypress-io/github-action@v2
+      env:
+        CYPRESS_CRASH_REPORTS: 0
+      with:
+        start: npm run start:dist
+    - name: List built files
+      if: ${{ github.ref == 'refs/heads/master' }}
+      run: ls dist
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+
+    - name: download articals
+      uses: actions/download-artifact@v2
+      with:
+        name: production-file
+        path: ./dist
+
+    - name: deploy to gh-pages
+      uses: peaceiris/actions-gh-pages@v3
+      with: 
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
